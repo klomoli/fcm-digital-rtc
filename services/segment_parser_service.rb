@@ -4,14 +4,18 @@ class SegmentParserService < ApplicationService
   TIME_REGEX = /\d{2}:\d{2}/
   IATA_REGEX = /[A-Z]{3}/ #IATAs are always three-letter capital words: SVQ, MAD, BCN, NYC
 
-  def initialize(reservations)
+  def initialize(reservations, pattern)
     @reservations = reservations
+    @pattern = pattern
   end
 
   def call
     segments = []
-    @reservations.each do |line|
-       segments << parse_segment(line) if line.start_with?("SEGMENT:")
+    @reservations.each do |reservation|
+      lines_data = reservation.split(@pattern).map(&:strip).reject(&:empty?)
+      lines_data.each do |segment|
+        segments << parse_segment(segment)
+      end
     end
 
     segments
@@ -43,10 +47,10 @@ class SegmentParserService < ApplicationService
       if line.match(/Flight #{IATA_REGEX} #{DATE_REGEX} #{TIME_REGEX} -> #{IATA_REGEX} #{TIME_REGEX}/)
         data = line.split
         type = "flight"
-        from = data[2]
-        departure_date = "#{data[3]} #{data[4]}"
-        to = data[6]
-        arrival_date = "#{data[7]}"
+        from = data[1]
+        departure_date = "#{data[2]} #{data[3]}"
+        to = data[5]
+        arrival_date = "#{data[6]}"
         Segment.new(type: type, from: from, to: to, departure_date: departure_date, arrival_date: arrival_date)
       end
     end
@@ -55,10 +59,10 @@ class SegmentParserService < ApplicationService
       if line.match(/Train #{IATA_REGEX} #{DATE_REGEX} #{TIME_REGEX} -> #{IATA_REGEX} #{TIME_REGEX}/)
         data = line.split
         type = "train"
-        from = data[2]
-        departure_date = "#{data[3]} #{data[4]}"
-        to = data[6]
-        arrival_date = "#{data[7]}"
+        from = data[1]
+        departure_date = "#{data[2]} #{data[3]}"
+        to = data[5]
+        arrival_date = "#{data[6]}"
         Segment.new(type: type, from: from, to: to, departure_date: departure_date, arrival_date: arrival_date)
       end
     end
@@ -67,9 +71,9 @@ class SegmentParserService < ApplicationService
       if line.match(/Hotel #{IATA_REGEX} #{DATE_REGEX} -> #{DATE_REGEX}/)
         data = line.split
         type = "hotel"
-        location = data[2]
-        check_in_date = data[3]
-        check_out_date = data[5]
+        location = data[1]
+        check_in_date = data[2]
+        check_out_date = data[4]
         Segment.new(type: type, from: location, to: location, departure_date: check_in_date, arrival_date: check_out_date)
       end
     end
