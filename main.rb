@@ -5,7 +5,10 @@ require_relative 'services/application_service'
 require_relative 'services/file_reader_reservations_service'
 require_relative 'services/segment_parser_service'
 
-reservations = FileReaderReservationsService.call('input.txt')
+file_path = ARGV[0]
+raise "Please provide a file path: bundle exec ruby main.rb path_to_txt" if file_path.nil?
+
+reservations = FileReaderReservationsService.call(file_path)
 segments = SegmentParserService.call(reservations, 'SEGMENT:')
 
 segments.each do |segment|

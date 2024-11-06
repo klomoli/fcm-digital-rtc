@@ -5,13 +5,15 @@ class SegmentParserService < ApplicationService
   IATA_REGEX = /[A-Z]{3}/ #IATAs are always three-letter capital words: SVQ, MAD, BCN, NYC
 
   def initialize(reservations, pattern)
-    @reservations = reservations
+    @reservations = reservations # Array of strings of segments
     @pattern = pattern
   end
 
   def call
     segments = []
     @reservations.each do |reservation|
+      # Each array element delimited by the pattern is processed with strip to remove whitespace/tabs or line breaks,
+      # and we apply reject to remove any empty elements. This may happen if we encounter RESERVATION RESERVATION.
       lines_data = reservation.split(@pattern).map(&:strip).reject(&:empty?)
       lines_data.each do |segment|
         segments << parse_segment(segment)
