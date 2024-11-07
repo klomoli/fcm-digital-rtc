@@ -32,4 +32,8 @@ class Segment
       date.strftime("%H:%M")
     end
 
+    def is_transport_segment?
+      @type == "flight" || @type == "train"
+    end
+
 end

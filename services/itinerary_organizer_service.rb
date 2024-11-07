@@ -7,27 +7,18 @@ class ItineraryOrganizerService < ApplicationService
   end
 
   def call
-
-    trips = []
-    starting_segments = extract_starting_segments
-
-    starting_segments.each do |segment|
-      
-      trip = create_trip_with_segments(segment)
-      
-      trips << trip
+    trips = starting_segments.map do |segment|
+      create_trip_with_segments(segment)
     end
-
+            
     Itinerary.new(trips: trips)
   end
 
   private
 
 
-  def extract_starting_segments
-    starting_segments = @segments.select do |segment|
-      segment.from == @based_location && (segment.type == "flight" || segment.type == "train")
-    end
+  def starting_segments
+    @segments.select { |segment| starting_from_based_location?(segment) }
   end
 
   def create_trip_with_segments(starting_segment)
@@ -55,6 +46,13 @@ class ItineraryOrganizerService < ApplicationService
     connected_segments.each { |segment| trip.add_segment(segment) }
     trip
   end
+
+
+  def starting_from_based_location?(segment)
+    segment.from == @based_location && segment.is_transport_segment?
+  end
+
+  
   
 
 
