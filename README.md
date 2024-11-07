@@ -69,7 +69,7 @@ This project is written in Ruby. To execute it:
 
    ```bash
    bundle install
-   BASED=SVQ ruby main.rb filex.txt
+   BASED=SVQ bundle exec ruby main.rb filex.txt
    ```
 2. Run the test with Rspec
 ```bash
