@@ -7,8 +7,8 @@ class ItineraryOrganizerService < ApplicationService
   end
 
   def call
-    trips = starting_segments.map do |segment|
-      build_trip(segment)
+    trips = starting_segments.map do |starting_segment|
+      generate_trip_from_segment(starting_segment)
     end
             
     Itinerary.new(trips: trips)
@@ -21,56 +21,63 @@ class ItineraryOrganizerService < ApplicationService
     @segments.select { |segment| starting_from_based_location?(segment) }
   end
 
-  def build_trip(starting_segment)
+
+
+  def generate_trip_from_segment(starting_segment)
     trip = Trip.new(destination: starting_segment.to)
-    connected_segments = connected_segments(starting_segment, trip)
-    
-    connected_segments.each { |segment| trip.add_segment(segment) }
+    connected_segments(starting_segment, trip)
+    # search destination for interval connection
+    trip.destination = trip.last_segment.to if trip.last_segment.to != @based_location
     trip
   end
 
-
-  def starting_from_based_location?(segment)
-    segment.from == @based_location && segment.is_transport_segment?
-  end
-
+  # Recursive way to find the connected segments
   def connected_segments(starting_segment, trip)
-    connected_segments = []
-    connected_segments << starting_segment
-    @segments.each do |segment|
-      next if segment.from != starting_segment.to
+    trip.add_segment(starting_segment)
 
-      if hotel_in_same_day?(segment, starting_segment)
-        connected_segments << segment
-      elsif segment.is_transport_segment?   
-        if segment.from == starting_segment.to && returning_to_based_location?(segment, starting_segment)
-          connected_segments << segment
-        else
-          if segment.from == starting_segment.to && connection_interval?(segment, starting_segment)
-            connected_segments << segment
-            updated_trip_destination(trip, segment)
-          end
-        end
-      end
+    next_segment = find_next_segment(starting_segment.to, starting_segment.arrival_date)
+
+    #recursive case
+    connected_segments(next_segment, trip) if next_segment # based case , if exists next segment
+  end
+
+
+  def find_next_segment(destination, arrival_date)
+
+    @segments.find do |segment|
+      segment.from == destination && (
+        hotel_in_same_day?(segment, arrival_date) || 
+        transport_segment_connected?(segment, arrival_date)
+      )
     end
-    connected_segments
   end
 
+  # we work with two conditions, 
+    #if the segment is a hotel and the departure date is the same as the arrival date of current segment
+    # or if the segment is a transport segment and the destination is the same as the based location and the departure date is greater than the arrival date of the current segment
+    # or is a connection interval
 
-  def updated_trip_destination(trip, segment)
-    trip.destination = segment.to
+  def hotel_in_same_day?(segment, arrival_date)
+    segment.is_hotel? && segment.departure_date.strftime("%Y-%m-%d") == arrival_date.strftime("%Y-%m-%d")
   end
 
-  def hotel_in_same_day?(segment, starting_segment)
-    segment.is_hotel? && segment.departure_date.strftime("%Y-%m-%d") == starting_segment.departure_date.strftime("%Y-%m-%d")
+  def transport_segment_connected?(segment, arrival_date)
+    segment.is_transport?  &&
+    connection_interval?(segment, arrival_date) &&
+    segment.departure_date > arrival_date
   end
 
-  def connection_interval?(segment, starting_segment)
-    (segment.departure_date - starting_segment.arrival_date < CONNECTION_INTERVAL_IN_DAYS) && segment.departure_date > starting_segment.arrival_date
+  # auxiliar methods
+  def starting_from_based_location?(segment)
+    segment.from == @based_location
+  end
+
+  def connection_interval?(segment, arrival_date)
+    ((segment.departure_date - arrival_date).to_f < CONNECTION_INTERVAL_IN_DAYS)
   end
   
-  def returning_to_based_location?(segment, starting_segment)
-    (segment.to == @based_location && segment.departure_date > starting_segment.arrival_date)
+  def returning_to_based_location?(segment, arrival_date)
+    (segment.to == @based_location && segment.departure_date > arrival_date)
   end
 
 
