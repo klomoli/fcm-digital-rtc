@@ -43,10 +43,10 @@ class ItineraryOrganizerService < ApplicationService
       if hotel_in_same_day?(segment, starting_segment)
         connected_segments << segment
       elsif segment.is_transport_segment?   
-        if (segment.from == starting_segment.to) && (segment.to == @based_location && segment.departure_date > starting_segment.arrival_date)
+        if segment.from == starting_segment.to && returning_to_based_location?(segment, starting_segment)
           connected_segments << segment
         else
-          if segment.from == starting_segment.to && (segment.departure_date - starting_segment.arrival_date < CONNECTION_INTERVAL_IN_DAYS) && segment.departure_date > starting_segment.arrival_date
+          if segment.from == starting_segment.to && connection_interval?(segment, starting_segment)
             connected_segments << segment
             updated_trip_destination(trip, segment)
           end
@@ -65,8 +65,13 @@ class ItineraryOrganizerService < ApplicationService
     segment.is_hotel? && segment.departure_date.strftime("%Y-%m-%d") == starting_segment.departure_date.strftime("%Y-%m-%d")
   end
 
+  def connection_interval?(segment, starting_segment)
+    (segment.departure_date - starting_segment.arrival_date < CONNECTION_INTERVAL_IN_DAYS) && segment.departure_date > starting_segment.arrival_date
+  end
   
-  
+  def returning_to_based_location?(segment, starting_segment)
+    (segment.to == @based_location && segment.departure_date > starting_segment.arrival_date)
+  end
 
 
   
