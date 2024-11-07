@@ -36,4 +36,8 @@ class Segment
       @type == "flight" || @type == "train"
     end
 
+    def is_hotel?
+      @type == "hotel"
+    end
+
 end

@@ -40,10 +40,9 @@ class ItineraryOrganizerService < ApplicationService
     @segments.each do |segment|
       next if segment.from != starting_segment.to
 
-      if segment.type == "hotel" && segment.departure_date.strftime("%Y-%m-%d") == starting_segment.departure_date.strftime("%Y-%m-%d")
+      if hotel_in_same_day?(segment, starting_segment)
         connected_segments << segment
-      elsif segment.type == "flight" || segment.type == "train"
-        
+      elsif segment.is_transport_segment?   
         if (segment.from == starting_segment.to) && (segment.to == @based_location && segment.departure_date > starting_segment.arrival_date)
           connected_segments << segment
         else
@@ -60,6 +59,10 @@ class ItineraryOrganizerService < ApplicationService
 
   def updated_trip_destination(trip, segment)
     trip.destination = segment.to
+  end
+
+  def hotel_in_same_day?(segment, starting_segment)
+    segment.is_hotel? && segment.departure_date.strftime("%Y-%m-%d") == starting_segment.departure_date.strftime("%Y-%m-%d")
   end
 
   
