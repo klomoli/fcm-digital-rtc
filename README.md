@@ -51,11 +51,15 @@ The solution is divided into three main services:
 
 ### 1. `FileReaderReservationsService`
 
+Reads the input file and extracts the reservations. The service is responsible for identifying the type of reservation and extracting the relevant details to create a structured object.
 
 ### 2. `SegmentParserService`
 
+Parses each RESERVATION section to extract segments, such as flights, trains, and hotels. The service is responsible for identifying the type of segment and extracting the relevant details to create a structured object.
 
 ### 3. `ItineraryOrganizerService`
+
+Organizes the segments into trips based on the destination. The service is responsible for grouping the segments by destination and sorting them by date to create a structured itinerary.
 
 ## How to Run
 
