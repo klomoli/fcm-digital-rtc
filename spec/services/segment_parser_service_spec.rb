@@ -26,8 +26,8 @@ RSpec.describe SegmentParserService do
       expect(flight_segment.type).to eq('flight')
       expect(flight_segment.from).to eq('SVQ')
       expect(flight_segment.to).to eq('BCN')
-      expect(flight_segment.departure_date).to eq('2023-03-02 06:40')
-      expect(flight_segment.arrival_date).to eq('09:10')
+      expect(flight_segment.departure_date).to eq(DateTime.parse('2023-03-02 06:40'))
+      expect(flight_segment.arrival_date).to eq(DateTime.parse('2023-03-02 09:10'))    
     end
 
     it 'parses a hotel segment correctly' do
@@ -36,8 +36,8 @@ RSpec.describe SegmentParserService do
       expect(hotel_segment.type).to eq('hotel')
       expect(hotel_segment.from).to eq('BCN')
       expect(hotel_segment.to).to eq('BCN')
-      expect(hotel_segment.departure_date).to eq('2023-01-05')
-      expect(hotel_segment.arrival_date).to eq('2023-01-10')
+      expect(hotel_segment.departure_date).to eq(DateTime.parse('2023-01-05'))
+      expect(hotel_segment.arrival_date).to eq(DateTime.parse('2023-01-10'))
     end
 
     it 'raise an error if the segment type is unknown' do
