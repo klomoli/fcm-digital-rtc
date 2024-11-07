@@ -4,13 +4,17 @@ require_relative 'models/itinerary'
 require_relative 'services/application_service'
 require_relative 'services/file_reader_reservations_service'
 require_relative 'services/segment_parser_service'
+require_relative 'services/itinerary_organizer_service'
 
 file_path = ARGV[0]
-raise "Please provide a file path: bundle exec ruby main.rb path_to_txt" if file_path.nil?
+based_location = ENV['BASED']
+raise "Please provide a file path, for example: BASED=SVQ ruby main.rb <input_file>" if file_path.nil?
+raise "Please provide a based location, for example: BASED=SVQ ruby main.rb <input_file>" if based_location.nil?
 
 reservations = FileReaderReservationsService.call(file_path)
 segments = SegmentParserService.call(reservations, 'SEGMENT:')
 
-segments.each do |segment|
-  puts segment.to_s
-end
+
+itinerary = ItineraryOrganizerService.call(segments, based_location)
+
+puts itinerary.trips.map(&:to_s).join("\n\n")

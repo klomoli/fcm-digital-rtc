@@ -1,3 +1,5 @@
+require 'date'
+
 class SegmentParserService < ApplicationService
 
   DATE_REGEX = /\d{4}-\d{2}-\d{2}/
@@ -50,9 +52,9 @@ class SegmentParserService < ApplicationService
         data = line.split
         type = "flight"
         from = data[1]
-        departure_date = "#{data[2]} #{data[3]}"
+        departure_date = DateTime.parse("#{data[2]} #{data[3]}")
         to = data[5]
-        arrival_date = "#{data[6]}"
+        arrival_date = DateTime.parse("#{data[2]} #{data[6]}")
         Segment.new(type: type, from: from, to: to, departure_date: departure_date, arrival_date: arrival_date)
       end
     end
@@ -62,9 +64,9 @@ class SegmentParserService < ApplicationService
         data = line.split
         type = "train"
         from = data[1]
-        departure_date = "#{data[2]} #{data[3]}"
+        departure_date = DateTime.parse("#{data[2]} #{data[3]}")
         to = data[5]
-        arrival_date = "#{data[6]}"
+        arrival_date = DateTime.parse("#{data[2]} #{data[6]}")
         Segment.new(type: type, from: from, to: to, departure_date: departure_date, arrival_date: arrival_date)
       end
     end
@@ -74,8 +76,8 @@ class SegmentParserService < ApplicationService
         data = line.split
         type = "hotel"
         location = data[1]
-        check_in_date = data[2]
-        check_out_date = data[4]
+        check_in_date = DateTime.parse(data[2])
+        check_out_date = DateTime.parse(data[4])
         Segment.new(type: type, from: location, to: location, departure_date: check_in_date, arrival_date: check_out_date)
       end
     end

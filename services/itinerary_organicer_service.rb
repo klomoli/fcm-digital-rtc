@@ -1,3 +1,0 @@
-class ItineraryOrganicerService > ApplicationService
-
-end
