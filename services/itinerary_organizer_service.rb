@@ -8,7 +8,7 @@ class ItineraryOrganizerService < ApplicationService
 
   def call
     trips = starting_segments.map do |segment|
-      create_trip_with_segments(segment)
+      build_trip(segment)
     end
             
     Itinerary.new(trips: trips)
@@ -21,8 +21,20 @@ class ItineraryOrganizerService < ApplicationService
     @segments.select { |segment| starting_from_based_location?(segment) }
   end
 
-  def create_trip_with_segments(starting_segment)
+  def build_trip(starting_segment)
     trip = Trip.new(destination: starting_segment.to)
+    connected_segments = connected_segments(starting_segment, trip)
+    
+    connected_segments.each { |segment| trip.add_segment(segment) }
+    trip
+  end
+
+
+  def starting_from_based_location?(segment)
+    segment.from == @based_location && segment.is_transport_segment?
+  end
+
+  def connected_segments(starting_segment, trip)
     connected_segments = []
     connected_segments << starting_segment
     @segments.each do |segment|
@@ -37,19 +49,17 @@ class ItineraryOrganizerService < ApplicationService
         else
           if segment.from == starting_segment.to && (segment.departure_date - starting_segment.arrival_date < CONNECTION_INTERVAL_IN_DAYS) && segment.departure_date > starting_segment.arrival_date
             connected_segments << segment
-            trip.destination = connected_segments.last.to
+            updated_trip_destination(trip, segment)
           end
         end
       end
     end
-
-    connected_segments.each { |segment| trip.add_segment(segment) }
-    trip
+    connected_segments
   end
 
 
-  def starting_from_based_location?(segment)
-    segment.from == @based_location && segment.is_transport_segment?
+  def updated_trip_destination(trip, segment)
+    trip.destination = segment.to
   end
 
   
